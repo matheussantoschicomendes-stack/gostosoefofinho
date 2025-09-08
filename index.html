@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Surpresa Romântica</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Arial", sans-serif;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      color: white;
+      position: relative;
+    }
+
+    /* Partículas/corações */
+    .particle {
+      position: absolute;
+      background: url('https://i.imgur.com/tZlIpsZ.png') no-repeat center center;
+      background-size: contain;
+      pointer-events: none;
+      animation: fall linear infinite;
+      z-index: 1;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Coração pulsante */
+    #heart {
+      width: 150px;
+      height: 150px;
+      background: red;
+      position: relative;
+      transform: rotate(-45deg) scale(0);
+      animation: surgir 2s ease forwards, pulse 1.5s infinite;
+      cursor: pointer;
+      z-index: 2;
+    }
+    #heart:before, #heart:after {
+      content: "";
+      width: 150px;
+      height: 150px;
+      background: red;
+      border-radius: 50%;
+      position: absolute;
+    }
+    #heart:before { top: -75px; left: 0; }
+    #heart:after { left: 75px; top: 0; }
+
+    @keyframes surgir {
+      0% { transform: rotate(-45deg) scale(0); opacity: 0; }
+      50% { transform: rotate(-45deg) scale(1.2); opacity: 1; }
+      100% { transform: rotate(-45deg) scale(1); }
+    }
+
+    @keyframes pulse {
+      0% { transform: rotate(-45deg) scale(1); }
+      50% { transform: rotate(-45deg) scale(1.1); }
+      100% { transform: rotate(-45deg) scale(1); }
+    }
+
+    /* Álbum */
+    #album {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 90%;
+      max-width: 600px;
+      animation: fadeIn 1s forwards;
+      z-index: 2;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .foto {
+      display: none;
+      max-width: 100%;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+
+    .foto.ativa {
+      display: block;
+    }
+
+    .setas {
+      margin-top: 15px;
+    }
+
+    button {
+      background: crimson;
+      border: none;
+      color: white;
+      font-size: 18px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: darkred; }
+
+    #mensagem {
+      display: none;
+      font-size: 22px;
+      line-height: 1.5;
+      animation: fadeIn 2s forwards;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Música -->
+  <audio id="musica" src="dejaneiroajaneiro.mp3" loop></audio>
+
+  <!-- Partículas -->
+  <div id="particles"></div>
+
+  <!-- Coração -->
+  <div id="heart"></div>
+
+  <!-- Álbum -->
+  <div id="album">
+    <div class="setas">
+      <button onclick="anterior()">⬅️</button>
+      <button onclick="proxima()">➡️</button>
+    </div>
+    <div id="mensagem">
+      <p>GOSTOSO E FOFINHO KKKKKKKKKK! 💖</p>
+    </div>
+  </div>
+
+  <script>
+    const heart = document.getElementById("heart");
+    const album = document.getElementById("album");
+    const musica = document.getElementById("musica");
+    const mensagem = document.getElementById("mensagem");
+    const particlesContainer = document.getElementById('particles');
+
+    // Lista de fotos (6 fotos já inseridas)
+    const fotosSrc = [
+      'img/foto1.png',
+      'img/foto2.png',
+      'img/foto3.png',
+      'img/foto4.png',
+      'img/foto5.png',
+      'img/foto6.png'
+    ];
+
+    let index = 0;
+    const fotos = [];
+
+    // Criar imagens dinamicamente
+    fotosSrc.forEach((src, i) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.classList.add('foto');
+      if(i === 0) img.classList.add('ativa');
+      album.insertBefore(img, album.querySelector('.setas'));
+      fotos.push(img);
+    });
+
+    // Coração clicado → abre álbum e toca música
+    heart.addEventListener("click", () => {
+      heart.style.display = "none";
+      album.style.display = "flex";
+      musica.play();
+    });
+
+    // Próxima foto
+    function proxima() {
+      fotos[index].classList.remove("ativa");
+      index++;
+      if(index >= fotos.length) {
+        fotos.forEach(f => f.style.display = "none");
+        mensagem.style.display = "block";
+        return;
+      }
+      fotos[index].classList.add("ativa");
+    }
+
+    // Foto anterior
+    function anterior() {
+      if(mensagem.style.display === "block") {
+        mensagem.style.display = "none";
+        fotos[index-1].style.display = "block";
+        index = fotos.length - 1;
+        return;
+      }
+      fotos[index].classList.remove("ativa");
+      index--;
+      if(index < 0) index = fotos.length - 1;
+      fotos[index].classList.add("ativa");
+    }
+
+    // Criar partículas de coração aleatórias
+    function criarParticula() {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      const size = Math.random() * 20 + 15;
+      particle.style.width = size + 'px';
+      particle.style.height = size + 'px';
+      particle.style.left = Math.random() * window.innerWidth + 'px';
+      particle.style.animationDuration = (3 + Math.random() * 5) + 's';
+      particle.style.opacity = Math.random() * 0.8 + 0.2;
+      particle.style.transform = `rotate(${Math.random()*360}deg)`;
+      particlesContainer.appendChild(particle);
+      setTimeout(() => { particle.remove(); }, 8000);
+    }
+
+    setInterval(criarParticula, 200);
+  </script>
+</body>
+</html>
